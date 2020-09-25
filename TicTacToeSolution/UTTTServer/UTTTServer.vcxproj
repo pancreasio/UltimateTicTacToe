@@ -20,8 +20,8 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{E84E2BD7-611A-4952-B4F2-5B1676195A73}</ProjectGuid>
-    <RootNamespace>TicTacToe</RootNamespace>
+    <ProjectGuid>{05761F47-B060-411D-BCA7-BC37B39F174D}</ProjectGuid>
+    <RootNamespace>UTTTServer</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -124,12 +124,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="MultiplayerClient.cpp" />
-    <ClCompile Include="Singleplayer.cpp" />
+    <ClCompile Include="MultiplayerServer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MultiplayerClient.h" />
-    <ClInclude Include="Singleplayer.h" />
+    <ClInclude Include="MultiplayerServer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

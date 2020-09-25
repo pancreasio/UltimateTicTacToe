@@ -25,7 +25,7 @@ Gamestate CheckOptions(int input)
 			result = singleplayer;
 			break;
 		case 2:
-			result = singleplayer;
+			result = multiplayer;
 			break;
 		case 3:
 			result = exitgame;
@@ -73,6 +73,7 @@ void main()
 			ShowOptions();
 			break;
 		case multiplayer:
+			cout << "multiplayer currently unavailable" << endl;
 			break;
 		case exitgame:
 			gameended = true;
