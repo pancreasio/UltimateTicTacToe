@@ -93,7 +93,55 @@ void MultiplayerServer::StartSertver()
 
 		if((MessageType)msg.cmd == connectToServer)
 		{
-			cout << "funca" << endl;
+			cout << "new user found" << endl;
+			User* user = new User;
+			user->adress = client;
+			users.push_back(user);
+
+			msg.cmd = (byte)MessageType::connectToServer;
+			strcpy_s(msg.data, "createUsername");
+			memset(msg.data, 0, sizeof(msg.data));
+			sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&client, sizeof(client));
+		}
+
+		if ((MessageType)msg.cmd == setUsername)
+		{
+			bool userExists = false;
+			for (int i = 0; i<users.size(); i++)
+			{
+				sockaddr* clientAddress = (sockaddr*)&client;
+				sockaddr* userAddress = (sockaddr*)&users[i]->adress;
+				if(memcmp(clientAddress, userAddress, sizeof(clientAddress)) == 0)
+				{
+					strcpy_s(users[i]->username, msg.data);
+					cout << "user " << i << " chose the username: " + (string)msg.data << endl;
+					bool foundOpenRoom = false;
+					for (int i2 = 0; i2<rooms.size(); i2++)
+					{
+						if (!rooms[i2]->player2connected)
+						{
+							users[i]->currentGame = rooms[i2];
+							rooms[i2]->player2connected = true;
+							foundOpenRoom = true;
+							i2 = rooms.size();
+							cout << "allocated both players in room" << endl;
+						}
+					}
+					if (!foundOpenRoom)
+					{
+						UTTTGame* newRoom = new UTTTGame;
+						rooms.push_back(newRoom);
+						newRoom->player1connected = true;
+					}
+					userExists = true;
+					i = users.size();
+				}
+			}
+
+			msg.cmd = (byte)MessageType::connectedToRoom;
+			strcpy_s(msg.data, "room");
+			memset(msg.data, 0, sizeof(msg.data));
+			sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&client, sizeof(client));
 		}
 	}
 }

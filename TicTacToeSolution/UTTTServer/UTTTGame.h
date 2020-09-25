@@ -44,8 +44,9 @@ protected:
 	}
 
 public:
-
-	UTTTGame() {};
+	bool player1connected;
+	bool player2connected;
+	UTTTGame() { player1connected = false; player2connected = false; };
 	~UTTTGame();
 	void StartGame();
 	bool CheckLastMoveValid();

@@ -74,17 +74,21 @@ void MultiplayerClient::StartClient()
 		}
 		else
 		{
-			if(!(MessageType)msg.cmd==connectToServer)
+			char serverInfo[256];
+			strcpy_s(serverInfo, msg.data);
+			if(!(MessageType)msg.cmd==connectToServer || serverInfo == "createUsername")
 			{
+				cout << "server error, closing program...";
 				return;
-			}
+			}				
 		}
 		
 		
 		cout << "Connected to the Server!"<<endl;
 		cout << "Choose your username" << endl;
 
-		getline(cin, msgtest);
+		cin >> msgtest;
+		//getline(cin, msgtest);
 		strcpy_s(msg.data, msgtest.c_str());
 
 		msg.cmd = (byte)MessageType::setUsername;
