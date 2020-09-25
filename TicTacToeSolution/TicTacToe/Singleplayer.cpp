@@ -209,6 +209,8 @@ void Singleplayer::PlayGame()
 		currentGamestate.cellArray[i] = emptyCell;
 	}
 
+	RenderGamestate(currentGamestate);
+	
 	while (!gameEnded)
 	{
 		cout << "input move" << endl;
@@ -229,6 +231,7 @@ void Singleplayer::PlayGame()
 			}
 
 		}
+		system("cls");
 		currentGamestate.cellArray[playerInputInt - 1] = dot;
 
 		if (!CheckAll(currentGamestate, dot) || !CheckAll(currentGamestate, cross) || RemainingMoves(currentGamestate) > 0)
