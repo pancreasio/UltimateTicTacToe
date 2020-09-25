@@ -1,5 +1,6 @@
 #include <iostream>
 #include  "Singleplayer.h"
+#include "MultiplayerClient.h"
 
 using namespace std;
 
@@ -46,6 +47,7 @@ void main()
 	char playerInputChar;
 	int playerInput;
 	Singleplayer game;
+	MultiplayerClient MPgame;
 	ShowOptions();
 
 	while (!gameended)
@@ -69,11 +71,14 @@ void main()
 		case singleplayer:
 			system("cls");
 			game.PlayGame();
-			system("cls");
 			ShowOptions();
 			break;
 		case multiplayer:
-			cout << "multiplayer currently unavailable" << endl;
+			//cout << "multiplayer currently unavailable" << endl;
+			system("cls");
+			MPgame.StartClient();
+			ShowOptions();
+
 			break;
 		case exitgame:
 			gameended = true;

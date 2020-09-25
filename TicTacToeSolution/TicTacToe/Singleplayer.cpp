@@ -1,5 +1,4 @@
 #include "Singleplayer.h"
-
 #include "iostream"
 
 using namespace std;

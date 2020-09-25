@@ -21,9 +21,15 @@
     <ClCompile Include="MultiplayerServer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="UTTTGame.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MultiplayerServer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UTTTGame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
