@@ -76,15 +76,15 @@ void MultiplayerClient::StartClient()
 		{
 			char serverInfo[256];
 			strcpy_s(serverInfo, msg.data);
-			if(!(MessageType)msg.cmd==connectToServer || serverInfo == "createUsername")
+			if (!(MessageType)msg.cmd == connectToServer || serverInfo == "createUsername")
 			{
 				cout << "server error, closing program...";
 				return;
-			}				
+			}
 		}
-		
-		
-		cout << "Connected to the Server!"<<endl;
+
+
+		cout << "Connected to the Server!" << endl;
 		cout << "Choose your username" << endl;
 
 		cin >> msgtest;
@@ -94,7 +94,7 @@ void MultiplayerClient::StartClient()
 		msg.cmd = (byte)MessageType::setUsername;
 		sendto(out, (char*)&msg, sizeof(Message), 0, (sockaddr*)&server, sizeof(server));
 
-		while(!returnToMenu)
+		while (!returnToMenu)
 		{
 			memset(buf, 0, sizeof(buf));
 			memset(&msg, 0, sizeof(msg));
@@ -107,7 +107,7 @@ void MultiplayerClient::StartClient()
 			}
 
 			MessageType command = (MessageType)msg.cmd;
-			
+
 			switch (command)
 			{
 			case connectToServer:break;
@@ -117,16 +117,25 @@ void MultiplayerClient::StartClient()
 				currentGameState = waitingRoom;
 				break;
 			case startGame:
-				if (currentGameState == waitingRoom)
+				cout << "game started!" << endl;
+				if (msg.data[0] == '1')
 				{
-					if (msg.data == "firstMove")
-						currentGameState = myTurn;
-					else
-						currentGameState = enemyTurn;
+					currentGameState = myTurn;
+					cout << "you are player 1" << endl;
 				}
-					break;
-			case sendMove: break;
+				if (msg.data[0] == '2')
+				{
+					currentGameState = enemyTurn;
+					cout << "you are player 2" << endl;
+				}
+				break;
+			case sendMove:
+				system("cls");
+				cout << msg.data << endl;
+				break;
 			case recieveMove:
+				system("cls");
+				cout << msg.data << endl;
 				currentGameState = myTurn;
 				break;
 			case invalidMove:
@@ -149,54 +158,44 @@ void MultiplayerClient::StartClient()
 					currentGameState = waitingRoom;
 				break;
 			case quitRoom: break;
-			default: ;
+			default:;
 			}
 
-			switch(currentGameState)
+			if(currentGameState == waitingRoom)
 			{
-			case waitingRoom:
-				break;
-			case myTurn:
+				
+			}
+			if(currentGameState == myTurn)
+			{
 				char playerInputChar;
 				int playerInputInt;
-				getline(cin, msgtest);
-				playerInputChar = msgtest[0];
-				strcpy_s(msg.data, msgtest.c_str());
-				cin >> playerInputChar;
-				playerInputInt = (int)playerInputChar - 48;
-				if (playerInputInt < 0 || playerInputInt>9)
+				bool validInput = false;
+				while (!validInput)
 				{
-					cout << "invalid input" << endl;
+					cin >> playerInputChar;
+					playerInputInt = (int)playerInputChar - 48;
+					if (playerInputInt < 0 || playerInputInt>9)
+					{
+						cout << "invalid input" << endl;
+					}
+					else
+						validInput = true;
 				}
-				else
-				{
-					msg.cmd = sendMove;
-					strcpy_s(msg.data, msgtest.c_str());
-					sendto(out, (char*)&msg, sizeof(Message), 0, (sockaddr*)&server, sizeof(server));
-				}
-
-				break;
-			case enemyTurn:
-				cout << "enemy turn" << endl;
-				break;
-			case gameEnded:
-				return;
-				break;
-			case rematchScreen: break;
-			case exitGame: break;
-				return;
-			default: ;
+				msg.cmd = sendMove;
+				msg.data[0] = playerInputChar;
+				sendto(out, (char*)&msg, sizeof(Message), 0, (sockaddr*)&server, sizeof(server));
 			}
-			
-			if (msg.data != " ")
-				cout << msg.data << endl;
+			if(currentGameState == enemyTurn)
+			{
+				cout << "enemy turn" << endl;
+			}
 		}
-		
+
 	}
-	
+
 	WSACleanup();
 	return;
-	
+
 }
 
 void MultiplayerClient::RecieveString(SOCKET& socket, sockaddr_in& server)

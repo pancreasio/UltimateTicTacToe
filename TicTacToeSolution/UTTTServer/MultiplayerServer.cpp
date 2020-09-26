@@ -36,6 +36,16 @@ struct User
 	bool wantsToRematch = false;
 };
 
+string getEnemy(User* player)
+{
+	if(player->currentGame->player1Name == player->username)
+	{
+		return player->currentGame->player2Name;
+	}
+	else
+		return player->currentGame->player1Name;
+}
+
 void MultiplayerServer::StartSertver()
 {
 	srand(time(NULL));
@@ -122,30 +132,108 @@ void MultiplayerServer::StartSertver()
 						{
 							users[i]->currentGame = rooms[i2];
 							rooms[i2]->player2connected = true;
+							rooms[i2]->player2Name = users[i]->username;
 							foundOpenRoom = true;
-							i2 = rooms.size();
 							cout << "allocated both players in room" << endl;
+							msg.cmd = (byte)MessageType::connectedToRoom;
+							strcpy_s(msg.data, "");
+							sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i]->adress, sizeof(users[i]->adress));
+							for(int i3 = 0; i3<users.size(); i3++)
+							{
+								if (users[i3]->username == rooms[i2]->player1Name)
+								{
+									int coin = rand() % 2;
+									msg.cmd = (byte)MessageType::startGame;
+									rooms[i2]->StartGame();
+									if(coin == 0)
+										strcpy_s(msg.data, "1");
+									else
+										strcpy_s(msg.data, "2");
+
+									sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i]->adress, sizeof(users[i]->adress));
+									msg.cmd = (byte)MessageType::startGame;
+									if (coin == 0)
+										strcpy_s(msg.data, "2");
+									else
+										strcpy_s(msg.data, "1");
+
+									sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i3]->adress, sizeof(users[i3]->adress));
+									cout << "game between " << users[i]->username << " and " << users[i3]->username << " started" << endl;
+									i3 = users.size();
+								}
+							}
+							i2 = rooms.size();
 						}
 					}
 					if (!foundOpenRoom)
 					{
-						UTTTGame* newRoom = new UTTTGame;
-						rooms.push_back(newRoom);
+						msg.cmd = (byte)MessageType::connectedToRoom;
+						strcpy_s(msg.data, "");
+						sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&client, sizeof(client));
+						UTTTGame* newRoom = new UTTTGame();
 						newRoom->player1connected = true;
+						newRoom->player1Name = users[i]->username;
+						rooms.push_back(newRoom);
 					}
 					userExists = true;
 					i = users.size();
 				}
 			}
+		}
+		if ((MessageType)msg.cmd == sendMove)
+		{
+			for(int i=0; i<users.size(); i++)
+			{
+				sockaddr* clientAddress = (sockaddr*)&client;
+				sockaddr* userAddress = (sockaddr*)&users[i]->adress;
+				if (memcmp(clientAddress, userAddress, sizeof(clientAddress)) == 0)
+				{
+					users[i]->currentGame->MakeInput((int)msg.data[0]);
+					if(!users[i]->currentGame->CheckLastMoveValid())
+					{
+						msg.cmd = (byte)MessageType::invalidMove;
+						strcpy_s(msg.data, "1");
+						sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i]->adress, sizeof(users[i]->adress));
+						memset(msg.data, 0, sizeof(msg.data));
+					}
+					else
+					{
+						msg.cmd = (byte)MessageType::sendMove;
+						strcpy_s(msg.data, users[i]->currentGame->ReturnGamestate().c_str());
+						sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i]->adress, sizeof(users[i]->adress));
 
-			msg.cmd = (byte)MessageType::connectedToRoom;
-			strcpy_s(msg.data, "room");
-			memset(msg.data, 0, sizeof(msg.data));
-			sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&client, sizeof(client));
+						msg.cmd = (byte)MessageType::recieveMove;
+						strcpy_s(msg.data, users[i]->currentGame->ReturnGamestate().c_str());
+
+						string enemyName = getEnemy(users[i]);
+						for(int i2=0; i2<users.size(); i2++)
+						{
+							if(users[i2]->username == enemyName.c_str())
+							{
+								sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i]->adress, sizeof(users[i]->adress));
+								i2 = users.size();
+							}
+						}						
+					}
+					
+					i = users.size();
+				}
+			}
 		}
 	}
 }
 
 void MultiplayerServer::RecieveString(SOCKET& socket, sockaddr_in& server)
 {
+	char buf[1024];
+	int serverSize = sizeof(server);
+	int bytesIn = recvfrom(socket, buf, sizeof(buf), 0, (sockaddr*)&server, &serverSize);
+
+	if (bytesIn == SOCKET_ERROR)
+	{
+		cerr << "socket error, closing program..." << endl;
+		return;
+	}
+
+	cout << buf << endl;
 }

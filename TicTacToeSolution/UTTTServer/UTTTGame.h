@@ -20,7 +20,6 @@ enum MatchState
 class UTTTGame
 {
 protected:
-	
 	Gamestate currentGamestate;
 	bool wasLastInputValid;
 	bool gameEnded;
@@ -45,7 +44,9 @@ protected:
 
 public:
 	bool player1connected;
+	std::string player1Name;
 	bool player2connected;
+	std::string player2Name;
 	UTTTGame() { player1connected = false; player2connected = false; };
 	~UTTTGame();
 	void StartGame();
