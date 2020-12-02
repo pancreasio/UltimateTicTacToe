@@ -161,9 +161,10 @@ std::string UTTTGame::ReturnGamestate()
 	{
 		for (int i2 = 0; i2 < 3; i2++)
 		{
-			result += CellToChar(currentGamestate.cellArray[i * 3 + i2]) + " ";
+			result.push_back(CellToChar(currentGamestate.cellArray[i * 3 + i2]));
+			result.push_back(' ');
 		}
-		result += "\n";
+		result.push_back('\n');
 	}
 	return result;
 }

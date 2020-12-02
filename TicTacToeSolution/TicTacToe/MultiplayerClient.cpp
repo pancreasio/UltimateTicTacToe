@@ -107,7 +107,7 @@ void MultiplayerClient::StartClient()
 			}
 
 			MessageType command = (MessageType)msg.cmd;
-
+			cout << command << endl;
 			switch (command)
 			{
 			case connectToServer:break;

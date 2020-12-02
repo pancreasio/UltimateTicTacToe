@@ -48,7 +48,7 @@ string getEnemy(User* player)
 
 void MultiplayerServer::StartSertver()
 {
-	srand(time(NULL));
+	srand(time(0));
 
 	WSADATA data;
 	WORD ver = MAKEWORD(2, 2);
@@ -133,6 +133,7 @@ void MultiplayerServer::StartSertver()
 							users[i]->currentGame = rooms[i2];
 							rooms[i2]->player2connected = true;
 							rooms[i2]->player2Name = users[i]->username;
+							rooms[i2]->StartGame();
 							foundOpenRoom = true;
 							cout << "allocated both players in room" << endl;
 							msg.cmd = (byte)MessageType::connectedToRoom;
@@ -171,6 +172,7 @@ void MultiplayerServer::StartSertver()
 						strcpy_s(msg.data, "");
 						sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&client, sizeof(client));
 						UTTTGame* newRoom = new UTTTGame();
+						users[i]->currentGame = newRoom;
 						newRoom->player1connected = true;
 						newRoom->player1Name = users[i]->username;
 						rooms.push_back(newRoom);
@@ -188,16 +190,19 @@ void MultiplayerServer::StartSertver()
 				sockaddr* userAddress = (sockaddr*)&users[i]->adress;
 				if (memcmp(clientAddress, userAddress, sizeof(clientAddress)) == 0)
 				{
-					users[i]->currentGame->MakeInput((int)msg.data[0]);
+					cout << users[i]->currentGame->ReturnGamestate()<<endl;
+					users[i]->currentGame->MakeInput((int)msg.data[0] - '0');
+					cout << users[i]->currentGame->ReturnGamestate() << endl;
 					if(!users[i]->currentGame->CheckLastMoveValid())
 					{
+						cout << "invalid move" << endl;
 						msg.cmd = (byte)MessageType::invalidMove;
 						strcpy_s(msg.data, "1");
 						sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i]->adress, sizeof(users[i]->adress));
-						memset(msg.data, 0, sizeof(msg.data));
 					}
 					else
 					{
+						cout << "valid move" << endl;
 						msg.cmd = (byte)MessageType::sendMove;
 						strcpy_s(msg.data, users[i]->currentGame->ReturnGamestate().c_str());
 						sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i]->adress, sizeof(users[i]->adress));
