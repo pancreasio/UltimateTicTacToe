@@ -209,13 +209,15 @@ void MultiplayerServer::StartSertver()
 
 						msg.cmd = (byte)MessageType::recieveMove;
 						strcpy_s(msg.data, users[i]->currentGame->ReturnGamestate().c_str());
-
-						string enemyName = getEnemy(users[i]);
+						string enemyName;
+						users[i]->currentGame->player1Name == users[i]->username ? enemyName = users[i]->currentGame->player2Name :
+							enemyName = users[i]->currentGame->player1Name;
+						
 						for(int i2=0; i2<users.size(); i2++)
 						{
-							if(users[i2]->username == enemyName.c_str())
+							if(users[i2]->username == enemyName)
 							{
-								sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i]->adress, sizeof(users[i]->adress));
+								sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i2]->adress, sizeof(users[i2]->adress));
 								i2 = users.size();
 							}
 						}						

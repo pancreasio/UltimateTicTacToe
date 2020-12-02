@@ -132,6 +132,7 @@ void MultiplayerClient::StartClient()
 			case sendMove:
 				system("cls");
 				cout << msg.data << endl;
+				currentGameState = enemyTurn;
 				break;
 			case recieveMove:
 				system("cls");
