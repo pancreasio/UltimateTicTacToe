@@ -377,6 +377,36 @@ void MultiplayerServer::StartSertver()
 				}
 			}
 		}
+		if ((MessageType)msg.cmd == quitRoom)
+		{
+			for (int i = 0; i < users.size(); i++)
+			{
+				sockaddr* clientAddress = (sockaddr*)&client;
+				sockaddr* userAddress = (sockaddr*)&users[i]->adress;
+				if (memcmp(clientAddress, userAddress, sizeof(clientAddress)) == 0)
+				{
+					UTTTGame* currentGame = users[i]->currentGame;
+					currentGame->StartGame();
+					msg.cmd = (byte)MessageType::quitRoom;
+					strcpy_s(msg.data, "");
+
+					string enemyName = "";
+					currentGame->player1Name == users[i]->username ? enemyName = currentGame->player2Name :
+						enemyName = currentGame->player1Name;
+					
+					sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i]->adress, sizeof(users[i]->adress));
+					for (int i3 = 0; i3 < users.size(); i3++)
+					{
+						if (users[i3]->username == enemyName)
+						{
+							sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i3]->adress, sizeof(users[i3]->adress));
+							i3 = users.size();
+						}
+					}
+					i = users.size();
+				}
+			}
+		}
 	}
 }
 
