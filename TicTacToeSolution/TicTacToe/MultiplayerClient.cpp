@@ -140,17 +140,17 @@ void MultiplayerClient::StartClient()
 				currentGameState = myTurn;
 				break;
 			case invalidMove:
-				if (msg.data == "true")
+				if (msg.data[0] == '1')
 					currentGameState = myTurn;
 				else
 					currentGameState = enemyTurn;
 				break;
 			case endGame:
-				if (msg.data == "playerWon")
+				if (msg.data[0] == '1')
 					cout << "you win!" << endl;
-				if (msg.data == "playerLost")
+				if (msg.data[0] == '2')
 					cout << "you suck!" << endl;
-				if (msg.data == "matchTie")
+				if (msg.data[0] == '3')
 					cout << "you both suck!" << endl;
 				currentGameState = rematchScreen;
 				break;
@@ -168,6 +168,7 @@ void MultiplayerClient::StartClient()
 			}
 			if(currentGameState == myTurn)
 			{
+				cout << "your turn" << endl;
 				char playerInputChar;
 				int playerInputInt;
 				bool validInput = false;

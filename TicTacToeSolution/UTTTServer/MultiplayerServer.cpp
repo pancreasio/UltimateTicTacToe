@@ -38,7 +38,7 @@ struct User
 
 string getEnemy(User* player)
 {
-	if(player->currentGame->player1Name == player->username)
+	if (player->currentGame->player1Name == player->username)
 	{
 		return player->currentGame->player2Name;
 	}
@@ -88,7 +88,7 @@ void MultiplayerServer::StartSertver()
 	int clientSize = sizeof(client);
 
 	bool shouldClose = false;
-	while(!shouldClose)
+	while (!shouldClose)
 	{
 		memset(buf, 0, sizeof(buf));
 		memset(&msg, 0, sizeof(msg));
@@ -101,7 +101,7 @@ void MultiplayerServer::StartSertver()
 			return;
 		}
 
-		if((MessageType)msg.cmd == connectToServer)
+		if ((MessageType)msg.cmd == connectToServer)
 		{
 			cout << "new user found" << endl;
 			User* user = new User;
@@ -117,16 +117,16 @@ void MultiplayerServer::StartSertver()
 		if ((MessageType)msg.cmd == setUsername)
 		{
 			bool userExists = false;
-			for (int i = 0; i<users.size(); i++)
+			for (int i = 0; i < users.size(); i++)
 			{
 				sockaddr* clientAddress = (sockaddr*)&client;
 				sockaddr* userAddress = (sockaddr*)&users[i]->adress;
-				if(memcmp(clientAddress, userAddress, sizeof(clientAddress)) == 0)
+				if (memcmp(clientAddress, userAddress, sizeof(clientAddress)) == 0)
 				{
 					strcpy_s(users[i]->username, msg.data);
 					cout << "user " << i << " chose the username: " + (string)msg.data << endl;
 					bool foundOpenRoom = false;
-					for (int i2 = 0; i2<rooms.size(); i2++)
+					for (int i2 = 0; i2 < rooms.size(); i2++)
 					{
 						if (!rooms[i2]->player2connected)
 						{
@@ -139,14 +139,14 @@ void MultiplayerServer::StartSertver()
 							msg.cmd = (byte)MessageType::connectedToRoom;
 							strcpy_s(msg.data, "");
 							sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i]->adress, sizeof(users[i]->adress));
-							for(int i3 = 0; i3<users.size(); i3++)
+							for (int i3 = 0; i3 < users.size(); i3++)
 							{
 								if (users[i3]->username == rooms[i2]->player1Name)
 								{
 									int coin = rand() % 2;
 									msg.cmd = (byte)MessageType::startGame;
 									rooms[i2]->StartGame();
-									if(coin == 0)
+									if (coin == 0)
 										strcpy_s(msg.data, "1");
 									else
 										strcpy_s(msg.data, "2");
@@ -184,45 +184,139 @@ void MultiplayerServer::StartSertver()
 		}
 		if ((MessageType)msg.cmd == sendMove)
 		{
-			for(int i=0; i<users.size(); i++)
+			for (int i = 0; i < users.size(); i++)
 			{
 				sockaddr* clientAddress = (sockaddr*)&client;
 				sockaddr* userAddress = (sockaddr*)&users[i]->adress;
 				if (memcmp(clientAddress, userAddress, sizeof(clientAddress)) == 0)
 				{
-					cout << users[i]->currentGame->ReturnGamestate()<<endl;
 					users[i]->currentGame->MakeInput((int)msg.data[0] - '0');
-					cout << users[i]->currentGame->ReturnGamestate() << endl;
-					if(!users[i]->currentGame->CheckLastMoveValid())
+					if (!users[i]->currentGame->CheckLastMoveValid())
 					{
-						cout << "invalid move" << endl;
 						msg.cmd = (byte)MessageType::invalidMove;
 						strcpy_s(msg.data, "1");
 						sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i]->adress, sizeof(users[i]->adress));
 					}
 					else
 					{
-						cout << "valid move" << endl;
-						msg.cmd = (byte)MessageType::sendMove;
-						strcpy_s(msg.data, users[i]->currentGame->ReturnGamestate().c_str());
-						sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i]->adress, sizeof(users[i]->adress));
-
-						msg.cmd = (byte)MessageType::recieveMove;
-						strcpy_s(msg.data, users[i]->currentGame->ReturnGamestate().c_str());
+						UTTTGame* currentGame = users[i]->currentGame;
 						string enemyName;
-						users[i]->currentGame->player1Name == users[i]->username ? enemyName = users[i]->currentGame->player2Name :
-							enemyName = users[i]->currentGame->player1Name;
 						
-						for(int i2=0; i2<users.size(); i2++)
+						MatchState matchState = currentGame->GetCurrentResult();
+						if(matchState == ongoing)
 						{
-							if(users[i2]->username == enemyName)
+							msg.cmd = (byte)MessageType::sendMove;
+							strcpy_s(msg.data, users[i]->currentGame->ReturnGamestate().c_str());
+							sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i]->adress, sizeof(users[i]->adress));
+
+							msg.cmd = (byte)MessageType::recieveMove;
+							strcpy_s(msg.data, users[i]->currentGame->ReturnGamestate().c_str());
+
+							currentGame->player1Name == users[i]->username ? enemyName = currentGame->player2Name :
+								enemyName = currentGame->player1Name;
+
+							for (int i2 = 0; i2 < users.size(); i2++)
 							{
-								sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i2]->adress, sizeof(users[i2]->adress));
-								i2 = users.size();
+								if (users[i2]->username == enemyName)
+								{
+									sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i2]->adress, sizeof(users[i2]->adress));
+									i2 = users.size();
+								}
 							}
-						}						
+						}
+						else
+						{
+							currentGame->player1Name == users[i]->username ? enemyName = currentGame->player2Name :
+								enemyName = currentGame->player1Name;
+							
+							bool isUser1Player1 = currentGame->player1Name == users[i]->username;
+							msg.cmd = (byte)MessageType::endGame;
+							
+							switch (currentGame->GetCurrentResult())
+							{
+							case ongoing:
+								cout << "xddd" << endl;
+								break;
+							case p1Won:	
+								if(isUser1Player1)
+								{
+									strcpy_s(msg.data, "1");
+									sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i]->adress, sizeof(users[i]->adress));
+
+									strcpy_s(msg.data, "2");
+									for (int i2 = 0; i2 < users.size(); i2++)
+									{
+										if (users[i2]->username == enemyName)
+										{
+											sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i2]->adress, sizeof(users[i2]->adress));
+											i2 = users.size();
+										}
+									}
+								}
+								else
+								{
+									strcpy_s(msg.data, "2");
+									sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i]->adress, sizeof(users[i]->adress));
+
+									strcpy_s(msg.data, "1");
+									for (int i2 = 0; i2 < users.size(); i2++)
+									{
+										if (users[i2]->username == enemyName)
+										{
+											sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i2]->adress, sizeof(users[i2]->adress));
+											i2 = users.size();
+										}
+									}
+								}
+								break;
+							case p2Won:
+								if (!isUser1Player1)
+								{
+									strcpy_s(msg.data, "1");
+									sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i]->adress, sizeof(users[i]->adress));
+
+									strcpy_s(msg.data, "2");
+									for (int i2 = 0; i2 < users.size(); i2++)
+									{
+										if (users[i2]->username == enemyName)
+										{
+											sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i2]->adress, sizeof(users[i2]->adress));
+											i2 = users.size();
+										}
+									}
+								}
+								else
+								{
+									strcpy_s(msg.data, "2");
+									sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i]->adress, sizeof(users[i]->adress));
+
+									strcpy_s(msg.data, "1");
+									for (int i2 = 0; i2 < users.size(); i2++)
+									{
+										if (users[i2]->username == enemyName)
+										{
+											sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i2]->adress, sizeof(users[i2]->adress));
+											i2 = users.size();
+										}
+									}
+								}
+								break;
+							case gameTied:
+								strcpy_s(msg.data, "3");
+								sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i]->adress, sizeof(users[i]->adress));
+								for (int i2 = 0; i2 < users.size(); i2++)
+								{
+									if (users[i2]->username == enemyName)
+									{
+										sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i2]->adress, sizeof(users[i2]->adress));
+										i2 = users.size();
+									}
+								}
+								break;
+							}
+						}							
 					}
-					
+
 					i = users.size();
 				}
 			}
