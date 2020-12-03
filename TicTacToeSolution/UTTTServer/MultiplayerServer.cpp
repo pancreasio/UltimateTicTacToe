@@ -321,6 +321,62 @@ void MultiplayerServer::StartSertver()
 				}
 			}
 		}
+		if((MessageType)msg.cmd == rematchInRoom)
+		{
+			for (int i = 0; i < users.size(); i++)
+			{
+				sockaddr* clientAddress = (sockaddr*)&client;
+				sockaddr* userAddress = (sockaddr*)&users[i]->adress;
+				if (memcmp(clientAddress, userAddress, sizeof(clientAddress)) == 0)
+				{
+					if(users[i]->currentGame->rematchState == waiting)
+					{
+						users[i]->currentGame->rematchState = tryingRematch;
+					}
+					else
+					{
+						if(users[i]->currentGame->rematchState == tryingRematch)
+						{
+							UTTTGame* currentGame = users[i]->currentGame;
+							currentGame->StartGame();
+							msg.cmd = (byte)MessageType::rematchInRoom;
+							strcpy_s(msg.data, "");
+							sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i]->adress, sizeof(users[i]->adress));
+
+							string enemyName = "";							
+							currentGame->player1Name == users[i]->username ? enemyName = currentGame->player2Name :
+								enemyName = currentGame->player1Name;
+							
+							for (int i3 = 0; i3 < users.size(); i3++)
+							{
+								if (users[i3]->username == enemyName)
+								{
+									int coin = rand() % 2;
+									msg.cmd = (byte)MessageType::startGame;
+									currentGame->StartGame();
+									if (coin == 0)
+										strcpy_s(msg.data, "1");
+									else
+										strcpy_s(msg.data, "2");
+
+									sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i]->adress, sizeof(users[i]->adress));
+									msg.cmd = (byte)MessageType::startGame;
+									if (coin == 0)
+										strcpy_s(msg.data, "2");
+									else
+										strcpy_s(msg.data, "1");
+
+									sendto(listening, (char*)&msg, sizeof(Message), 0, (sockaddr*)&users[i3]->adress, sizeof(users[i3]->adress));
+									cout << "game between " << users[i]->username << " and " << users[i3]->username << " started" << endl;
+									i3 = users.size();
+								}
+							}
+						}
+					}
+					i = users.size();
+				}
+			}
+		}
 	}
 }
 

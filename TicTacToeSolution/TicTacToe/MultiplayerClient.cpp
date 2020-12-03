@@ -158,14 +158,49 @@ void MultiplayerClient::StartClient()
 				if (currentGameState == rematchInRoom)
 					currentGameState = waitingRoom;
 				break;
-			case quitRoom: break;
+			case quitRoom:
+					currentGameState = exitGame;
+				break;
 			default:;
 			}
 
-			if(currentGameState == waitingRoom)
+			if(currentGameState == rematchScreen)
 			{
+				cout << "would you like a rematch?\n 1: yes, play again \n 2: no, take me to the menu" << endl;
+				char playerInputChar;
+				int playerInputInt;
+				bool validInput = false;
+				while (!validInput)
+				{
+					cin >> playerInputChar;
+					playerInputInt = (int)playerInputChar - 48;
+					if (playerInputInt <= 0 || playerInputInt>2)
+					{
+						cout << "invalid input" << endl;
+					}
+					else
+						validInput = true;
+				}
+				if(playerInputInt == 1)
+				{
+					msg.cmd = (byte)rematchInRoom;
+					sendto(out, (char*)&msg, sizeof(Message), 0, (sockaddr*)&server, sizeof(server));
+					currentGameState = waitingRoom;
+				}
+				if(playerInputInt == 2)
+				{
+					returnToMenu = true;
+					msg.cmd = (byte)quitRoom;
+					sendto(out, (char*)&msg, sizeof(Message), 0, (sockaddr*)&server, sizeof(server));
+				}
 				
 			}
+			if (currentGameState == waitingRoom)
+			{
+				system("cls");
+				cout << "waiting for the opponent"<<endl;
+			}
+			
 			if(currentGameState == myTurn)
 			{
 				cout << "your turn" << endl;
@@ -176,7 +211,7 @@ void MultiplayerClient::StartClient()
 				{
 					cin >> playerInputChar;
 					playerInputInt = (int)playerInputChar - 48;
-					if (playerInputInt < 0 || playerInputInt>9)
+					if (playerInputInt <= 0 || playerInputInt>9)
 					{
 						cout << "invalid input" << endl;
 					}
@@ -191,13 +226,17 @@ void MultiplayerClient::StartClient()
 			{
 				cout << "enemy turn" << endl;
 			}
+			if(currentGameState == exitGame)
+			{
+				cout << "the enemy chickened out" << endl;
+				returnToMenu = true;
+			}
 		}
 
 	}
 
 	WSACleanup();
 	return;
-
 }
 
 void MultiplayerClient::RecieveString(SOCKET& socket, sockaddr_in& server)

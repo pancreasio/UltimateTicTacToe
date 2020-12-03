@@ -103,9 +103,9 @@ bool CheckInput(int input, Gamestate gamestate)
 
 void UTTTGame::StartGame()
 {
-	char playerInputChar;
-	int playerInputInt;
 	gameEnded = false;
+	wasLastInputValid = true;
+	rematchState = playing;
 	currentPlayer = dot;
 
 	for (int i = 0; i < 9; i++)
@@ -145,6 +145,8 @@ MatchState UTTTGame::GetCurrentResult()
 {
 	if (!gameEnded)
 		return ongoing;
+	else
+		rematchState = waiting;
 	if (CheckAll(currentGamestate, dot))
 		return p1Won;
 	else

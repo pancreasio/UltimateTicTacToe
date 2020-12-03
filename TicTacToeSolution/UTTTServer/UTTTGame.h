@@ -17,6 +17,10 @@ enum MatchState
 	ongoing, p1Won, p2Won, gameTied
 };
 
+enum RematchState{
+	tryingRematch, rematchRejected, waiting, playing
+};
+
 class UTTTGame
 {
 protected:
@@ -44,6 +48,7 @@ protected:
 
 public:
 	bool player1connected;
+	RematchState rematchState;
 	std::string player1Name;
 	bool player2connected;
 	std::string player2Name;
